@@ -20,12 +20,12 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 历史K线回调处理
+ * 数据回调处理
  */
 @Slf4j
 @Component
 @AllArgsConstructor
-public class HistoryKLDataCallBack implements FTSPI_Qot {
+public class DataCallBack implements FTSPI_Qot {
 
     private final HistoryKlService historyKlService;
     private final StocksBaseService stocksBaseService;

@@ -18,11 +18,11 @@ public class HistoryKL {
      * @param nextReqKey nextReqKey
      **/
     public void getHistoryKL(String code, ByteString nextReqKey) {
-        if (!HistoryHandler.isInit) {
+        if (!QotInit.isInit) {
             log.error("Qot not init");
             return;
         }
-        FTAPI_Conn_Qot qot = HistoryHandler.getQot();
+        FTAPI_Conn_Qot qot = QotInit.getQot();
         //股票市场以及股票代码
         QotCommon.Security sec = QotCommon.Security.newBuilder()
                 .setMarket(QotCommon.QotMarket.QotMarket_HK_Security_VALUE)//港股

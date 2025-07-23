@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @AllArgsConstructor
-public class HistoryKLConnCallBack implements FTSPI_Conn {
+public class ConnCallBack implements FTSPI_Conn {
 
     @Override
     public void onInitConnect(FTAPI_Conn client, long errCode, String desc) {
@@ -18,7 +18,7 @@ public class HistoryKLConnCallBack implements FTSPI_Conn {
             log.error("Qot initConnect failed: ret={} desc={}", errCode, desc);
             throw new RuntimeException("Qot initConnect failed");
         }
-        HistoryHandler.isInit = true;
+        QotInit.isInit = true;
         log.info("Qot initConnected");
     }
 

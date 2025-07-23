@@ -2,11 +2,9 @@ package com.macro.mall.tiny.modules.futu.controller;
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.macro.mall.tiny.common.api.CommonResult;
-import com.macro.mall.tiny.futu.HistoryHandler;
 import com.macro.mall.tiny.futu.HistoryKL;
 import com.macro.mall.tiny.modules.futu.response.HistoryKLResp;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import com.macro.mall.tiny.modules.futu.service.HistoryKlService;
 import com.macro.mall.tiny.modules.futu.model.HistoryKl;
