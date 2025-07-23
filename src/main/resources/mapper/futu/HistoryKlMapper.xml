@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.tiny.modules.futu.mapper.HistoryKlMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.macro.mall.tiny.modules.futu.model.HistoryKl">
+        <id column="id" property="id" />
+        <result column="code" property="code" />
+        <result column="name" property="name" />
+        <result column="open_price" property="openPrice" />
+        <result column="close_price" property="closePrice" />
+        <result column="high_price" property="highPrice" />
+        <result column="low_price" property="lowPrice" />
+        <result column="change_rate" property="changeRate" />
+        <result column="data_time" property="dataTime" />
+        <result column="create_date" property="createDate" />
+        <result column="update_date" property="updateDate" />
+    </resultMap>
+
+</mapper>

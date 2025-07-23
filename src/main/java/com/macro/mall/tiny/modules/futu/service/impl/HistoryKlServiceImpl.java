@@ -1,0 +1,31 @@
+package com.macro.mall.tiny.modules.futu.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.macro.mall.tiny.modules.futu.mapper.HistoryKlMapper;
+import com.macro.mall.tiny.modules.futu.model.HistoryKl;
+import com.macro.mall.tiny.modules.futu.service.HistoryKlService;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+/**
+ * <p>
+ * 服务实现类
+ * </p>
+ *
+ * @author macro
+ * @since 2025-07-23
+ */
+@Service
+public class HistoryKlServiceImpl extends ServiceImpl<HistoryKlMapper, HistoryKl> implements HistoryKlService {
+
+    @Override
+    public List<HistoryKl> getHistoryKL(String code) {
+        QueryWrapper<HistoryKl> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id", "code", "name", "change_rate", "close_price", "high_price", "low_price", "open_price", "data_time");
+        queryWrapper.eq("code", code);
+        queryWrapper.orderByAsc("id");
+        return baseMapper.selectList(queryWrapper);
+    }
+}
