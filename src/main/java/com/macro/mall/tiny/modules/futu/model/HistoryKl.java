@@ -23,7 +23,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("history_kl")
+@TableName("stocks_history_kl")
 @ApiModel(value = "HistoryKl对象", description = "")
 public class HistoryKl implements Serializable {
 

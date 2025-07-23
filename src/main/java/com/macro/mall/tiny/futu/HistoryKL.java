@@ -11,6 +11,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class HistoryKL {
 
+    /**
+     * 请求历史K线数据
+     *
+     * @param code       股票代码
+     * @param nextReqKey nextReqKey
+     **/
     public void getHistoryKL(String code, ByteString nextReqKey) {
         if (!HistoryHandler.isInit) {
             log.error("Qot not init");
@@ -19,21 +25,22 @@ public class HistoryKL {
         FTAPI_Conn_Qot qot = HistoryHandler.getQot();
         //股票市场以及股票代码
         QotCommon.Security sec = QotCommon.Security.newBuilder()
-                .setMarket(QotCommon.QotMarket.QotMarket_HK_Security_VALUE)
-                .setCode(code)//腾讯
+                .setMarket(QotCommon.QotMarket.QotMarket_HK_Security_VALUE)//港股
+                .setCode(code)//股票代码
                 .build();
 
         QotRequestHistoryKL.C2S c2s = QotRequestHistoryKL.C2S.newBuilder()
                 .setRehabType(QotCommon.RehabType.RehabType_Forward_VALUE)
                 .setKlType(QotCommon.KLType.KLType_Day_VALUE)
-                .setSecurity(sec) // //股票市场以及股票代码
-                .setMaxAckKLNum(100)
-                .setNextReqKey(nextReqKey == null ? ByteString.EMPTY : nextReqKey)
+                .setSecurity(sec) //股票市场以及股票代码
+                .setMaxAckKLNum(100) //最大返回条数
+                .setNextReqKey(nextReqKey == null ? ByteString.EMPTY : nextReqKey)//上一次返回的nextReqKey，首次请求可以为空
                 .setBeginTime("2015-01-01")
                 .setEndTime("2025-07-22")
-                .setNeedKLFieldsFlag(527)
+                .setNeedKLFieldsFlag(527) //需要返回的K线数据字段(527=512+8+4+2+1) https://openapi.futunn.com/futu-api-doc/quote/quote.html#481
                 .build();
         QotRequestHistoryKL.Request req = QotRequestHistoryKL.Request.newBuilder().setC2S(c2s).build();
+        //发送请求
         qot.requestHistoryKL(req);
     }
 }

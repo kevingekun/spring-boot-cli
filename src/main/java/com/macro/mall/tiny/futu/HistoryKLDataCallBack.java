@@ -6,7 +6,9 @@ import com.futu.openapi.pb.QotCommon;
 import com.futu.openapi.pb.QotRequestHistoryKL;
 import com.google.protobuf.ByteString;
 import com.macro.mall.tiny.modules.futu.model.HistoryKl;
+import com.macro.mall.tiny.modules.futu.model.StocksBase;
 import com.macro.mall.tiny.modules.futu.service.HistoryKlService;
+import com.macro.mall.tiny.modules.futu.service.StocksBaseService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -26,8 +28,16 @@ import java.util.List;
 public class HistoryKLDataCallBack implements FTSPI_Qot {
 
     private final HistoryKlService historyKlService;
+    private final StocksBaseService stocksBaseService;
     private final HistoryKL historyKL;
 
+    /**
+     * 历史K线回调处理
+     *
+     * @param client
+     * @param nSerialNo
+     * @param rsp
+     **/
     @Override
     public void onReply_RequestHistoryKL(FTAPI_Conn client, int nSerialNo, QotRequestHistoryKL.Response rsp) {
         if (rsp.getRetType() != 0) {
@@ -66,6 +76,13 @@ public class HistoryKLDataCallBack implements FTSPI_Qot {
             ByteString nextReqKey = rsp.getS2C().getNextReqKey();
             if (!nextReqKey.isEmpty()) {
                 historyKL.getHistoryKL(code, nextReqKey);
+            } else {
+                //保存基础数据
+                StocksBase stocksBase = new StocksBase();
+                stocksBase.setCode(code);
+                stocksBase.setName(name);
+                stocksBase.setCreateDate(new Date());
+                stocksBaseService.save(stocksBase);
             }
         }
     }
