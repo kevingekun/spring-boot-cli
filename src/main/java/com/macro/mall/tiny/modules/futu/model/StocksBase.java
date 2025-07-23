@@ -32,7 +32,7 @@ public class StocksBase implements Serializable {
 
     private String content;
 
-    private Integer order;
+    private Integer orderNum;
 
     private Date createDate;
 

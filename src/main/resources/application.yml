@@ -50,3 +50,4 @@ secure:
       - /admin/logout
       - /test/**
       - /historyKl/**
+      - /stocksBase/**
