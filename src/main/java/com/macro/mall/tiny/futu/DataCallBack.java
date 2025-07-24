@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -34,9 +36,9 @@ public class DataCallBack implements FTSPI_Qot {
     /**
      * 历史K线回调处理
      *
-     * @param client
-     * @param nSerialNo
-     * @param rsp
+     * @param client    client
+     * @param nSerialNo nSerialNo
+     * @param rsp       rsp
      **/
     @Override
     public void onReply_RequestHistoryKL(FTAPI_Conn client, int nSerialNo, QotRequestHistoryKL.Response rsp) {
@@ -48,6 +50,8 @@ public class DataCallBack implements FTSPI_Qot {
             String name = rsp.getS2C().getName();
             List<QotCommon.KLine> klListList = rsp.getS2C().getKlListList();
             List<HistoryKl> historyKlList = new ArrayList<>();
+            Date dateNow = new Date();
+            HistoryKl historyKlNow = null;
             for (QotCommon.KLine kLine : klListList) {
                 double openPrice = kLine.getOpenPrice();
                 double closePrice = kLine.getClosePrice();
@@ -57,7 +61,8 @@ public class DataCallBack implements FTSPI_Qot {
                 double timestamp = kLine.getTimestamp();
                 HistoryKl historyKl = new HistoryKl();
                 //timestamp 为秒级时间戳,转换为 date
-                historyKl.setDataTime(new Date((long) (timestamp * 1000)));
+                Date date = new Date((long) (timestamp * 1000));
+                historyKl.setDataTime(date);
                 historyKl.setOpenPrice(new BigDecimal(openPrice).setScale(2, RoundingMode.HALF_UP));
                 historyKl.setClosePrice(new BigDecimal(closePrice).setScale(2, RoundingMode.HALF_UP));
                 historyKl.setHighPrice(new BigDecimal(highPrice).setScale(2, RoundingMode.HALF_UP));
@@ -65,12 +70,24 @@ public class DataCallBack implements FTSPI_Qot {
                 historyKl.setChangeRate(new BigDecimal(changeRate).setScale(2, RoundingMode.HALF_UP));
                 historyKl.setCode(code);
                 historyKl.setName(name);
-                historyKl.setCreateDate(new Date());
-                historyKl.setUpdateDate(new Date());
+                historyKl.setUpdateDate(dateNow);
+                LocalDate localDate = LocalDate.now();
+                // localDate 与 date 比较是不是同一天
+                LocalDate dateLocalDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                if (dateLocalDate.equals(localDate)) {
+                    //当天数据单独处理
+                    historyKlNow = historyKl;
+                    continue;
+                }
+                historyKl.setCreateDate(dateNow);
                 historyKlList.add(historyKl);
             }
             //批量插入
             historyKlService.saveBatch(historyKlList);
+            if (historyKlNow != null) {
+                //当天数据单独处理
+                historyKlService.saveOrUpdateData(historyKlNow);
+            }
             log.info("QotRequestHistoryKL success: {} {}", code, name);
             //递归调用
             ByteString nextReqKey = rsp.getS2C().getNextReqKey();
@@ -81,7 +98,7 @@ public class DataCallBack implements FTSPI_Qot {
                 StocksBase stocksBase = new StocksBase();
                 stocksBase.setCode(code);
                 stocksBase.setName(name);
-                stocksBase.setCreateDate(new Date());
+                stocksBase.setCreateDate(dateNow);
                 stocksBaseService.save(stocksBase);
             }
         }

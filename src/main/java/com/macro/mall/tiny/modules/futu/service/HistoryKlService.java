@@ -16,4 +16,6 @@ import java.util.List;
 public interface HistoryKlService extends IService<HistoryKl> {
 
     List<HistoryKl> getHistoryKL(String code);
+
+    void saveOrUpdateData(HistoryKl historyKl);
 }

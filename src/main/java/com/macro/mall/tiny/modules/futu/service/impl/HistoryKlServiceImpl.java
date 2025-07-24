@@ -7,6 +7,7 @@ import com.macro.mall.tiny.modules.futu.model.HistoryKl;
 import com.macro.mall.tiny.modules.futu.service.HistoryKlService;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -27,5 +28,18 @@ public class HistoryKlServiceImpl extends ServiceImpl<HistoryKlMapper, HistoryKl
         queryWrapper.eq("code", code);
         queryWrapper.orderByAsc("id");
         return baseMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public void saveOrUpdateData(HistoryKl historyKl) {
+        QueryWrapper<HistoryKl> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("code", historyKl.getCode());
+        queryWrapper.eq("data_time", historyKl.getDataTime());
+        if (baseMapper.selectCount(queryWrapper) > 0) {
+            baseMapper.update(historyKl, queryWrapper);
+        } else {
+            historyKl.setCreateDate(new Date());
+            baseMapper.insert(historyKl);
+        }
     }
 }
