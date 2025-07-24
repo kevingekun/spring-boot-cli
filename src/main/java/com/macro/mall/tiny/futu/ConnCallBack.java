@@ -18,7 +18,6 @@ public class ConnCallBack implements FTSPI_Conn {
             log.error("Qot initConnect failed: ret={} desc={}", errCode, desc);
             throw new RuntimeException("Qot initConnect failed");
         }
-        QotInit.isInit = true;
         log.info("Qot initConnected");
     }
 

@@ -2,21 +2,25 @@ package com.macro.mall.tiny.modules.futu.controller;
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.macro.mall.tiny.common.api.CommonResult;
-import com.macro.mall.tiny.futu.HistoryKL;
+import com.macro.mall.tiny.futu.DataCallBack;
+import com.macro.mall.tiny.futu.HistoryKLComponent;
+import com.macro.mall.tiny.futu.KLService;
 import com.macro.mall.tiny.modules.futu.response.HistoryKLResp;
 import lombok.AllArgsConstructor;
+import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.RequestMapping;
 import com.macro.mall.tiny.modules.futu.service.HistoryKlService;
 import com.macro.mall.tiny.modules.futu.model.HistoryKl;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.springframework.web.bind.annotation.*;
 
 
 /**
  * <p>
- *  前端控制器
+ * 前端控制器
  * </p>
  *
  * @author macro
@@ -28,7 +32,7 @@ import org.springframework.web.bind.annotation.*;
 public class HistoryKlController {
 
     private final HistoryKlService historyKlService;
-    private final HistoryKL historyKL;
+    private final ApplicationContext applicationContext;
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     @ResponseBody
@@ -75,7 +79,15 @@ public class HistoryKlController {
     @RequestMapping(value = "/add", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<List<HistoryKl>> add(@RequestParam("code") String code) {
-        historyKL.getHistoryKL(code, null);
+        HistoryKLComponent historyKLComponent = applicationContext.getBean(HistoryKLComponent.class);
+        historyKLComponent.getHistoryKL(code, null);
+        return CommonResult.success(new ArrayList<>());
+    }
+
+    @RequestMapping(value = "/last", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<List<HistoryKl>> getLastDay(@RequestParam("code") String code) {
+//        historyKLComponent.getLastDayKL(code, dataCallBack);
         return CommonResult.success(new ArrayList<>());
     }
 
@@ -85,7 +97,7 @@ public class HistoryKlController {
         HistoryKLResp resp = new HistoryKLResp();
         resp.setCode(code);
         List<HistoryKl> historyKlList = historyKlService.getHistoryKL(code);
-        if(CollectionUtil.isNotEmpty(historyKlList)){
+        if (CollectionUtil.isNotEmpty(historyKlList)) {
             String name = historyKlList.get(0).getName();
             resp.setName(name);
             resp.setHistoryKlList(historyKlList);

@@ -13,4 +13,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface StocksBaseService extends IService<StocksBase> {
 
+    void saveStocksBase(StocksBase stocksBase);
 }
