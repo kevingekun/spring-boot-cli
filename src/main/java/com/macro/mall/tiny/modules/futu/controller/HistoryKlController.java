@@ -2,7 +2,7 @@ package com.macro.mall.tiny.modules.futu.controller;
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.macro.mall.tiny.common.api.CommonResult;
-import com.macro.mall.tiny.futu.HistoryKLComponent;
+import com.macro.mall.tiny.modules.futu.component.HistoryKLComponent;
 import com.macro.mall.tiny.modules.futu.model.HistoryKl;
 import com.macro.mall.tiny.modules.futu.response.HistoryKLResp;
 import com.macro.mall.tiny.modules.futu.service.HistoryKlService;

@@ -1,4 +1,4 @@
-package com.macro.mall.tiny.futu;
+package com.macro.mall.tiny.modules.futu.component;
 
 import cn.hutool.core.collection.CollUtil;
 import com.futu.openapi.FTAPI;
@@ -28,6 +28,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * 历史K线数据组件
+ */
 @Slf4j
 @Component
 @Scope("prototype")
