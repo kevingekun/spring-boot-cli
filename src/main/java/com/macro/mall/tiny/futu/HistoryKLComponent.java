@@ -1,5 +1,6 @@
 package com.macro.mall.tiny.futu;
 
+import cn.hutool.core.collection.CollUtil;
 import com.futu.openapi.FTAPI;
 import com.futu.openapi.FTAPI_Conn;
 import com.futu.openapi.FTAPI_Conn_Qot;
@@ -16,6 +17,7 @@ import com.macro.mall.tiny.modules.futu.service.StocksBaseService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -50,6 +52,17 @@ public class HistoryKLComponent implements FTSPI_Qot, FTSPI_Conn {
         qot.setQotSpi(this);   //设置交易回调
         qot.initConnect("127.0.0.1", (short) 11111, false);
     }
+
+    /**
+     * 请求最近一天K线数据
+     *
+     * @param code 股票代码
+     **/
+    public void getLastKL(String code) {
+        String beginTime = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        requestHistoryKL(code, null, beginTime);
+    }
+
     /**
      * 请求历史K线数据
      *
@@ -57,6 +70,11 @@ public class HistoryKLComponent implements FTSPI_Qot, FTSPI_Conn {
      * @param nextReqKey nextReqKey
      **/
     public void getHistoryKL(String code, ByteString nextReqKey) {
+        String beginTime = "2015-01-01";
+        requestHistoryKL(code, nextReqKey, beginTime);
+    }
+
+    private void requestHistoryKL(String code, ByteString nextReqKey, String beginTime) {
         int count = 0;
         while (!isInit) {
             try {
@@ -83,7 +101,7 @@ public class HistoryKLComponent implements FTSPI_Qot, FTSPI_Conn {
                 .setSecurity(sec) //股票市场以及股票代码
                 .setMaxAckKLNum(100) //最大返回条数
                 .setNextReqKey(nextReqKey == null ? ByteString.EMPTY : nextReqKey)//上一次返回的nextReqKey，首次请求可以为空
-                .setBeginTime("2015-01-01")
+                .setBeginTime(beginTime)
                 .setEndTime(endTime)
                 .setNeedKLFieldsFlag(527) //需要返回的K线数据字段(527=512+8+4+2+1) https://openapi.futunn.com/futu-api-doc/quote/quote.html#481
                 .build();
@@ -158,8 +176,10 @@ public class HistoryKLComponent implements FTSPI_Qot, FTSPI_Conn {
             historyKl.setCreateDate(dateNow);
             historyKlList.add(historyKl);
         }
-        //批量插入
-        historyKlService.saveBatch(historyKlList);
+        if (CollUtil.isNotEmpty(historyKlList)) {
+            //批量插入
+            historyKlService.saveBatch(historyKlList);
+        }
         if (historyKlNow != null) {
             //当天数据单独处理
             historyKlService.saveOrUpdateData(historyKlNow);

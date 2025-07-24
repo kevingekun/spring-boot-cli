@@ -2,20 +2,22 @@ package com.macro.mall.tiny.modules.futu.controller;
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.macro.mall.tiny.common.api.CommonResult;
-import com.macro.mall.tiny.futu.DataCallBack;
 import com.macro.mall.tiny.futu.HistoryKLComponent;
-import com.macro.mall.tiny.futu.KLService;
+import com.macro.mall.tiny.modules.futu.model.HistoryKl;
 import com.macro.mall.tiny.modules.futu.response.HistoryKLResp;
+import com.macro.mall.tiny.modules.futu.service.HistoryKlService;
 import lombok.AllArgsConstructor;
 import org.springframework.context.ApplicationContext;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import com.macro.mall.tiny.modules.futu.service.HistoryKlService;
-import com.macro.mall.tiny.modules.futu.model.HistoryKl;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.springframework.web.bind.annotation.*;
 
 
 /**
@@ -87,7 +89,8 @@ public class HistoryKlController {
     @RequestMapping(value = "/last", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<List<HistoryKl>> getLastDay(@RequestParam("code") String code) {
-//        historyKLComponent.getLastDayKL(code, dataCallBack);
+        HistoryKLComponent historyKLComponent = applicationContext.getBean(HistoryKLComponent.class);
+        historyKLComponent.getLastKL(code);
         return CommonResult.success(new ArrayList<>());
     }
 
