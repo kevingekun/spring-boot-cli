@@ -8,8 +8,6 @@ import com.macro.mall.tiny.modules.futu.response.HistoryKLResp;
 import com.macro.mall.tiny.modules.futu.service.HistoryKlService;
 import lombok.AllArgsConstructor;
 import org.springframework.context.ApplicationContext;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,48 +34,11 @@ public class HistoryKlController {
     private final HistoryKlService historyKlService;
     private final ApplicationContext applicationContext;
 
-    @RequestMapping(value = "/create", method = RequestMethod.POST)
-    @ResponseBody
-    public CommonResult create(@RequestBody HistoryKl historyKl) {
-        boolean success = historyKlService.save(historyKl);
-        if (success) {
-            return CommonResult.success(null);
-        }
-        return CommonResult.failed();
-    }
-
-    @RequestMapping(value = "/update/{id}", method = RequestMethod.POST)
-    @ResponseBody
-    public CommonResult update(@PathVariable Long id, @RequestBody HistoryKl historyKl) {
-        historyKl.setId(id);
-        boolean success = historyKlService.updateById(historyKl);
-        if (success) {
-            return CommonResult.success(null);
-        }
-        return CommonResult.failed();
-    }
-
-    @RequestMapping(value = "/delete/{id}", method = RequestMethod.POST)
-    @ResponseBody
-    public CommonResult delete(@PathVariable Long id) {
-        boolean success = historyKlService.removeById(id);
-        if (success) {
-            return CommonResult.success(null);
-        }
-        return CommonResult.failed();
-    }
-
-    @RequestMapping(value = "/delete", method = RequestMethod.POST)
-    @ResponseBody
-    public CommonResult deleteBatch(@RequestParam("ids") List<Long> ids) {
-        boolean success = historyKlService.removeByIds(ids);
-        if (success) {
-            return CommonResult.success(null);
-        }
-        return CommonResult.failed();
-    }
-
-
+    /**
+     * 增加一个股票的历史数据
+     *
+     * @param code 股票代码
+     */
     @RequestMapping(value = "/add", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<List<HistoryKl>> add(@RequestParam("code") String code) {
@@ -86,14 +47,11 @@ public class HistoryKlController {
         return CommonResult.success(new ArrayList<>());
     }
 
-    @RequestMapping(value = "/last", method = RequestMethod.GET)
-    @ResponseBody
-    public CommonResult<List<HistoryKl>> getLastDay(@RequestParam("code") String code) {
-        HistoryKLComponent historyKLComponent = applicationContext.getBean(HistoryKLComponent.class);
-        historyKLComponent.getLastKL(code);
-        return CommonResult.success(new ArrayList<>());
-    }
-
+    /**
+     * 根据 code 查询全部历史数据
+     *
+     * @param code 股票代码
+     */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<HistoryKLResp> list(@RequestParam("code") String code) {
