@@ -7,6 +7,7 @@ import com.macro.mall.tiny.modules.futu.model.HistoryKl;
 import com.macro.mall.tiny.modules.futu.response.HistoryKLResp;
 import com.macro.mall.tiny.modules.futu.service.HistoryKlService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -26,6 +27,7 @@ import java.util.List;
  * @author macro
  * @since 2025-07-23
  */
+@Slf4j
 @RestController
 @RequestMapping("/historyKl")
 @AllArgsConstructor
@@ -50,14 +52,19 @@ public class HistoryKlController {
     /**
      * 根据 code 查询全部历史数据
      *
-     * @param code 股票代码
+     * @param code      股票代码
+     * @param startDate 开始日期
+     * @param endDate   结束日期
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ResponseBody
-    public CommonResult<HistoryKLResp> list(@RequestParam("code") String code) {
+    public CommonResult<HistoryKLResp> list(@RequestParam("code") String code,
+                                            @RequestParam("startDate") String startDate,
+                                            @RequestParam("endDate") String endDate) {
+        log.info("code: {}, startDate: {}, endDate: {}", code, startDate, endDate);
         HistoryKLResp resp = new HistoryKLResp();
         resp.setCode(code);
-        List<HistoryKl> historyKlList = historyKlService.getHistoryKL(code);
+        List<HistoryKl> historyKlList = historyKlService.getHistoryKL(code, startDate, endDate);
         if (CollectionUtil.isNotEmpty(historyKlList)) {
             String name = historyKlList.get(0).getName();
             resp.setName(name);

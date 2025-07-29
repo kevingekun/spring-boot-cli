@@ -1,5 +1,6 @@
 package com.macro.mall.tiny.modules.futu.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.macro.mall.tiny.modules.futu.mapper.HistoryKlMapper;
@@ -22,10 +23,16 @@ import java.util.List;
 public class HistoryKlServiceImpl extends ServiceImpl<HistoryKlMapper, HistoryKl> implements HistoryKlService {
 
     @Override
-    public List<HistoryKl> getHistoryKL(String code) {
+    public List<HistoryKl> getHistoryKL(String code, String startDate, String endDate) {
         QueryWrapper<HistoryKl> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("id", "code", "name", "change_rate", "close_price", "high_price", "low_price", "open_price", "data_time");
         queryWrapper.eq("code", code);
+        if (StrUtil.isNotBlank(startDate)) {
+            queryWrapper.ge("data_time", startDate);
+        }
+        if (StrUtil.isNotBlank(endDate)) {
+            queryWrapper.le("data_time", endDate);
+        }
         queryWrapper.orderByAsc("id");
         return baseMapper.selectList(queryWrapper);
     }

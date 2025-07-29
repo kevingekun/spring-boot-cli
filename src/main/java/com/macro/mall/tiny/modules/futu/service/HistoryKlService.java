@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * <p>
- *  服务类
+ * 服务类
  * </p>
  *
  * @author macro
@@ -15,7 +15,7 @@ import java.util.List;
  */
 public interface HistoryKlService extends IService<HistoryKl> {
 
-    List<HistoryKl> getHistoryKL(String code);
+    List<HistoryKl> getHistoryKL(String code, String startDate, String endDate);
 
     void saveOrUpdateData(HistoryKl historyKl);
 }
