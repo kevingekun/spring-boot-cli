@@ -33,7 +33,7 @@ public class StocksBaseController {
     @RequestMapping(value = "/listAll", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<List<StocksBase>> listAll() {
-        List<StocksBase> stocksBaseList = stocksBaseService.list();
+        List<StocksBase> stocksBaseList = stocksBaseService.listAllOfOrder();
         return CommonResult.success(stocksBaseList);
     }
 }

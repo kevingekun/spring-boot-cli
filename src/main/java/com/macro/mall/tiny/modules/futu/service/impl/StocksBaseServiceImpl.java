@@ -7,6 +7,9 @@ import com.macro.mall.tiny.modules.futu.service.StocksBaseService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * <p>
  * 股票基础信息 服务实现类
@@ -27,5 +30,12 @@ public class StocksBaseServiceImpl extends ServiceImpl<StocksBaseMapper, StocksB
         if (stocksBase == null) {
             baseMapper.insert(base);
         }
+    }
+
+    @Override
+    public List<StocksBase> listAllOfOrder() {
+        QueryWrapper<StocksBase> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByAsc("order_num");
+        return baseMapper.selectList(queryWrapper);
     }
 }
