@@ -18,4 +18,6 @@ public interface StocksBaseService extends IService<StocksBase> {
     void saveStocksBase(StocksBase stocksBase);
 
     List<StocksBase> listAllOfOrder();
+
+    StocksBase getByCode(String code);
 }

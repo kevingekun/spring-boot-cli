@@ -4,10 +4,13 @@ import cn.hutool.core.collection.CollectionUtil;
 import com.macro.mall.tiny.common.api.CommonResult;
 import com.macro.mall.tiny.modules.futu.component.HistoryKLComponent;
 import com.macro.mall.tiny.modules.futu.model.HistoryKl;
+import com.macro.mall.tiny.modules.futu.model.StocksBase;
 import com.macro.mall.tiny.modules.futu.response.HistoryKLResp;
 import com.macro.mall.tiny.modules.futu.service.HistoryKlService;
+import com.macro.mall.tiny.modules.futu.service.StocksBaseService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -35,15 +38,22 @@ public class HistoryKlController {
 
     private final HistoryKlService historyKlService;
     private final ApplicationContext applicationContext;
+    private final StocksBaseService stocksBaseService;
 
     /**
-     * 增加一个股票的历史数据
+     * 增加订阅一个股票的历史数据
      *
      * @param code 股票代码
      */
-    @RequestMapping(value = "/add", method = RequestMethod.GET)
+    @RequestMapping(value = "/subscribe", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<List<HistoryKl>> add(@RequestParam("code") String code) {
+        log.info("subscribe code: {}", code);
+        StocksBase stocksBase = stocksBaseService.getByCode(code);
+        if (stocksBase != null) {
+            log.info("subscribe already stocksBase: {}", stocksBase);
+            return CommonResult.failed("股票已经订阅过了");
+        }
         HistoryKLComponent historyKLComponent = applicationContext.getBean(HistoryKLComponent.class);
         historyKLComponent.getHistoryKL(code, null);
         return CommonResult.success(new ArrayList<>());
