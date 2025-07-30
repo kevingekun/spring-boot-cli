@@ -200,6 +200,7 @@ public class HistoryKLComponent implements FTSPI_Qot, FTSPI_Conn {
             stocksBase.setCode(code);
             stocksBase.setName(name);
             stocksBase.setCreateDate(dateNow);
+            stocksBase.setOrderNum(stocksBaseService.getMaxOrderNum() + 1);
             stocksBaseService.saveStocksBase(stocksBase);
         }
     }

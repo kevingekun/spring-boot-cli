@@ -45,4 +45,16 @@ public class StocksBaseServiceImpl extends ServiceImpl<StocksBaseMapper, StocksB
         queryWrapper.eq("code", code);
         return baseMapper.selectOne(queryWrapper);
     }
+
+    @Override
+    public Integer getMaxOrderNum() {
+        QueryWrapper<StocksBase> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("order_num");
+        queryWrapper.last("limit 1");
+        StocksBase stocksBase = baseMapper.selectOne(queryWrapper);
+        if (stocksBase != null) {
+            return stocksBase.getOrderNum();
+        }
+        return 0;
+    }
 }
