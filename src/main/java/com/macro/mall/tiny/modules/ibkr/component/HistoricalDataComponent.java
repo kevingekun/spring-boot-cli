@@ -34,7 +34,7 @@ public class HistoricalDataComponent {
 
     public void connect() {
         // Connect to TWS (port 7497 for paper trading, 7496 for live)
-        client.eConnect("127.0.0.1", 7496, 0);
+        client.eConnect("127.0.0.1", 4001, 0);
         // Start the message reader thread
         EReader reader = new EReader(client, callBackReaderComponent);
         reader.start();

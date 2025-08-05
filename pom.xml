@@ -171,6 +171,14 @@
             <artifactId>futu-api</artifactId>
             <version>9.3.5308</version>
         </dependency>
+<!-- 安装 JAR 包到本地 Maven 仓库
+mvn install:install-file -Dfile=/Users/unk/ssd/IdeaProjects/github/spring-boot-cli/lib/TwsApi.jar -DgroupId=com.ib -DartifactId=TwsApi -Dversion=1.0 -Dpackaging=jar
+-->
+        <dependency>
+            <groupId>com.ib</groupId>
+            <artifactId>TwsApi</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
     <build>
