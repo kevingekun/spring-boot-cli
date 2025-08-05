@@ -20,9 +20,9 @@ import java.util.List;
 public class UpdateDataSchedule {
 
     private final StocksBaseService stocksBaseService;
-    private final ApplicationContext applicationContext;
 
-    @Scheduled(cron = "0 */5 * * * ?")
+    //每周一到周五的 9:30-16:00 每5分钟更新一次
+    @Scheduled(cron = "0 0/5 9-16 ? * MON-FRI")
     public void updateData() {
         log.info("定时更新数据 开始");
         List<StocksBase> stocksBaseList = stocksBaseService.list();
@@ -35,4 +35,6 @@ public class UpdateDataSchedule {
         }
         log.info("定时更新数据 结束");
     }
+
+    private final ApplicationContext applicationContext;
 }

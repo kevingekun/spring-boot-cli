@@ -1,27 +1,34 @@
 package com.macro.mall.tiny.modules.ibkr.component;
 
-import com.ib.client.*;
+import com.ib.client.Contract;
+import com.ib.client.EClientSocket;
+import com.ib.client.EReader;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 
 @Slf4j
-@Lazy
 @Component
-@Scope("prototype")
-public class HistoricalDataComponent implements EWrapper, EReaderSignal {
+public class HistoricalDataComponent {
     private EClientSocket client;
     private int nextReqId = 1;
+    public static final HashMap<Integer, String> reqIdMap = new HashMap<>(8);
+
+    private final CallBackReaderComponent callBackReaderComponent;
+    private final CallBackWrapperComponent callBackWrapperComponent;
+
+    public HistoricalDataComponent(CallBackReaderComponent callBackReaderComponent, CallBackWrapperComponent callBackWrapperComponent) {
+        this.callBackReaderComponent = callBackReaderComponent;
+        this.callBackWrapperComponent = callBackWrapperComponent;
+    }
 
     @PostConstruct
-    public void init(){
-        client = new EClientSocket(this, this);
+    public void init() {
+        client = new EClientSocket(callBackWrapperComponent, callBackReaderComponent);
         connect();
     }
 
@@ -29,7 +36,7 @@ public class HistoricalDataComponent implements EWrapper, EReaderSignal {
         // Connect to TWS (port 7497 for paper trading, 7496 for live)
         client.eConnect("127.0.0.1", 7496, 0);
         // Start the message reader thread
-        EReader reader = new EReader(client, this);
+        EReader reader = new EReader(client, callBackReaderComponent);
         reader.start();
         new Thread(() -> {
             while (client.isConnected()) {
@@ -58,7 +65,7 @@ public class HistoricalDataComponent implements EWrapper, EReaderSignal {
         contract.exchange("SMART"); // 交易所：智能路由
         contract.currency("USD"); // 货币：美元
 
-        System.out.println("正在发送股票信息请求: " + symbol);
+        log.info("正在发送股票信息请求: {}", symbol);
         client.reqContractDetails(nextReqId++, contract);
     }
 
@@ -72,7 +79,7 @@ public class HistoricalDataComponent implements EWrapper, EReaderSignal {
 
         // Request delayed data (for free accounts)
         client.reqMarketDataType(3);
-        log.info("Sending historical data request for AAPL...");
+        log.info("Sending historical data request for {}...", code);
         int count = 0;
         while (!this.client.isConnected()) {
             try {
@@ -85,412 +92,77 @@ public class HistoricalDataComponent implements EWrapper, EReaderSignal {
                 throw new RuntimeException("Qot getHistoryKL init failed");
             }
         }
+        //获取当前日期
+        LocalDate now = LocalDate.now();
+        LocalDate localDate = LocalDate.of(2011, 1, 1);
+        boolean running = true;
+        if (this.client.isConnected()) {
+            while (running) {
+                // Request 1 day of daily bars
+                int id = nextReqId++;
+                //将业务对应 code 存入对应静态数据中，用于后续回调方法
+                reqIdMap.put(id, code);
+                String endTime = localDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + " 00:00:00 UTC";
+                log.info(endTime);
+                //useRTH 指定是否仅限常规交易时间,1：只返回常规交易时间,0：包括盘前和盘后数据
+                //formatDate 指定返回数据的日期格式,1：返回标准日期格式,2：返回 Unix 时间戳（秒数）
+                //keepUpToDate指定是否持续更新历史数据
+                client.reqHistoricalData(id, contract, endTime, "365 D", "1 day",
+                        "TRADES", 1, 1, false, null);// "TRADES": 成交价（最常用）
+                //向后推一年
+                localDate = localDate.plusYears(1);
+                if (localDate.isAfter(now.plusYears(1))) {
+                    running = false;
+                }
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    log.error("查询历史 k 线 sleep 异常", e);
+                    running = false;
+                }
+            }
+        }
+
+    }
+
+    public void getLastKL(String code) {
+        // Define the contract (e.g., AAPL stock)
+        Contract contract = new Contract();
+        contract.symbol(code);
+        contract.secType("STK");// "STK" 是 股票（Stock）的缩写，表示这是一个普通股票。
+        contract.exchange("SMART"); // 指定证券的交易所或路由方式,"SMART" 是 Interactive Brokers 提供的智能路由机制，它会自动选择最佳交易所（例如 NASDAQ、NYSE）来获取数据或执行交易。
+        contract.currency("USD");//指定证券的交易货币。
+
+        // Request delayed data (for free accounts)
+        client.reqMarketDataType(3);
+        log.info("Sending historical data request for {}...", code);
+        int count = 0;
+        while (!this.client.isConnected()) {
+            try {
+                Thread.sleep(100);
+                count++;
+            } catch (InterruptedException e) {
+                log.error("Qot getHistoryKL sleep error", e);
+            }
+            if (count > 50) {
+                throw new RuntimeException("Qot getHistoryKL init failed");
+            }
+        }
+        //获取当前日期
         if (this.client.isConnected()) {
             // Request 1 day of daily bars
-            client.reqHistoricalData(nextReqId++, contract, "20150728 00:00:00", "3 D", "1 day",
-                    "TRADES", 1, 1, false, null);// "TRADES": 成交价（最常用）
+            int id = nextReqId++;
+            //将业务对应 code 存入对应静态数据中，用于后续回调方法
+            reqIdMap.put(id, code);
+            LocalDate localDate = LocalDate.now();
+            String endTime = localDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + " 00:00:00 UTC";
+            log.info(endTime);
             //useRTH 指定是否仅限常规交易时间,1：只返回常规交易时间,0：包括盘前和盘后数据
             //formatDate 指定返回数据的日期格式,1：返回标准日期格式,2：返回 Unix 时间戳（秒数）
             //keepUpToDate指定是否持续更新历史数据
+            client.reqHistoricalData(id, contract, endTime, "1 D", "1 day",
+                    "TRADES", 1, 1, false, null);// "TRADES": 成交价（最常用）
         }
     }
-
-    @Override
-    public void historicalData(int reqId, Bar bar) {
-        log.info("Historical Data: Date={}, Open={}, High={}, Low={}, Close={}, Volume={}", bar.time(), bar.open(), bar.high(), bar.low(), bar.close(), bar.volume());
-    }
-
-    @Override
-    public void historicalDataEnd(int reqId, String startDateStr, String endDateStr) {
-        log.info("Historical Data Request Completed: reqId={}, Start={}, End={}", reqId, startDateStr, endDateStr);
-        client.eDisconnect();
-    }
-
-    @Override
-    public void error(Exception e) {
-        log.error("Exception: ", e);
-    }
-
-    @Override
-    public void error(String str) {
-        log.error("Error: {}", str);
-    }
-
-    @Override
-    public void error(int id, int errorCode, String errorMsg, String advancedOrderRejectJson) {
-        log.error("Error: id={}, code={}, msg={}, advanced={}", id, errorCode, errorMsg, advancedOrderRejectJson);
-    }
-
-    @Override
-    public void connectAck() {
-        log.info("Connected to TWS");
-    }
-
-    @Override
-    public void connectionClosed() {
-        log.info("Connection closed");
-    }
-
-    @Override
-    public void marketDataType(int reqId, int marketDataType) {
-        log.info("Market Data Type: {} (1=Live, 2=Frozen, 3=Delayed, 4=Delayed Frozen)", marketDataType);
-    }
-
-    // Other EWrapper methods (empty implementations)
-    @Override
-    public void tickPrice(int tickerId, int field, double price, TickAttrib attribs) {
-    }
-
-    @Override
-    public void tickSize(int tickerId, int field, Decimal size) {
-    }
-
-    @Override
-    public void tickOptionComputation(int tickerId, int field, int tickAttrib, double impliedVol, double delta, double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice) {
-    }
-
-    @Override
-    public void tickGeneric(int tickerId, int tickType, double value) {
-    }
-
-    @Override
-    public void tickString(int tickerId, int tickType, String value) {
-    }
-
-    @Override
-    public void tickEFP(int tickerId, int tickType, double basisPoints, String formattedBasisPoints, double impliedFuture, int holdDays, String futureLastTradeDate, double dividendImpact, double dividendsToLastTradeDate) {
-    }
-
-    @Override
-    public void orderStatus(int orderId, String status, Decimal filled, Decimal remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId, String whyHeld, double mktCapPrice) {
-    }
-
-    @Override
-    public void openOrder(int orderId, Contract contract, Order order, OrderState orderState) {
-    }
-
-    @Override
-    public void openOrderEnd() {
-    }
-
-    @Override
-    public void updateAccountValue(String key, String value, String currency, String accountName) {
-    }
-
-    @Override
-    public void updatePortfolio(Contract contract, Decimal position, double marketPrice, double marketValue, double averageCost, double unrealizedPNL, double realizedPNL, String accountName) {
-    }
-
-    @Override
-    public void updateAccountTime(String timeStamp) {
-    }
-
-    @Override
-    public void accountDownloadEnd(String accountName) {
-    }
-
-    @Override
-    public void nextValidId(int orderId) {
-    }
-
-    @Override
-    public void contractDetails(int reqId, ContractDetails contractDetails) {
-//        log.info("Contract Details: {}", contractDetails);
-        System.out.println("股票信息 (reqId=" + reqId + "):");
-        System.out.println("  股票代码: " + contractDetails.contract().symbol());
-        System.out.println("  公司名称: " + contractDetails.longName());
-        System.out.println("  主要交易所: " + contractDetails.contract().primaryExch());
-        System.out.println("  货币: " + contractDetails.contract().currency());
-        System.out.println("  行业: " + contractDetails.industry());
-        System.out.println("  类别: " + contractDetails.category());
-        System.out.println("  子类别: " + contractDetails.subcategory());
-        System.out.println("  市场名称: " + contractDetails.marketName());
-        System.out.println("  最低价格变动单位: " + contractDetails.minTick());
-    }
-
-    @Override
-    public void bondContractDetails(int reqId, ContractDetails contractDetails) {
-    }
-
-    @Override
-    public void contractDetailsEnd(int reqId) {
-    }
-
-    @Override
-    public void execDetails(int reqId, Contract contract, Execution execution) {
-    }
-
-    @Override
-    public void execDetailsEnd(int reqId) {
-    }
-
-    @Override
-    public void updateMktDepth(int tickerId, int position, int operation, int side, double price, Decimal size) {
-    }
-
-    @Override
-    public void updateMktDepthL2(int tickerId, int position, String marketMaker, int operation, int side, double price, Decimal size, boolean isSmartDepth) {
-    }
-
-    @Override
-    public void updateNewsBulletin(int msgId, int msgType, String message, String origExchange) {
-    }
-
-    @Override
-    public void managedAccounts(String accountsList) {
-    }
-
-    @Override
-    public void receiveFA(int faDataType, String xml) {
-    }
-
-    @Override
-    public void scannerParameters(String xml) {
-    }
-
-    @Override
-    public void scannerData(int reqId, int rank, ContractDetails contractDetails, String distance, String benchmark, String projection, String legsStr) {
-    }
-
-    @Override
-    public void scannerDataEnd(int reqId) {
-    }
-
-    @Override
-    public void realtimeBar(int reqId, long time, double open, double high, double low, double close, Decimal volume, Decimal wap, int count) {
-    }
-
-    @Override
-    public void currentTime(long time) {
-    }
-
-    @Override
-    public void fundamentalData(int reqId, String data) {
-    }
-
-    @Override
-    public void deltaNeutralValidation(int reqId, DeltaNeutralContract deltaNeutralContract) {
-    }
-
-    @Override
-    public void tickSnapshotEnd(int reqId) {
-    }
-
-    @Override
-    public void commissionReport(CommissionReport commissionReport) {
-    }
-
-    @Override
-    public void position(String account, Contract contract, Decimal pos, double avgCost) {
-    }
-
-    @Override
-    public void positionEnd() {
-    }
-
-    @Override
-    public void accountSummary(int reqId, String account, String tag, String value, String currency) {
-    }
-
-    @Override
-    public void accountSummaryEnd(int reqId) {
-    }
-
-    @Override
-    public void verifyMessageAPI(String apiData) {
-    }
-
-    @Override
-    public void verifyCompleted(boolean isSuccessful, String errorText) {
-    }
-
-    @Override
-    public void verifyAndAuthMessageAPI(String apiData, String xyzChallenge) {
-    }
-
-    @Override
-    public void verifyAndAuthCompleted(boolean isSuccessful, String errorText) {
-    }
-
-    @Override
-    public void displayGroupList(int reqId, String groups) {
-    }
-
-    @Override
-    public void displayGroupUpdated(int reqId, String contractInfo) {
-    }
-
-    @Override
-    public void positionMulti(int reqId, String account, String modelCode, Contract contract, Decimal pos, double avgCost) {
-    }
-
-    @Override
-    public void positionMultiEnd(int reqId) {
-    }
-
-    @Override
-    public void accountUpdateMulti(int reqId, String account, String modelCode, String key, String value, String currency) {
-    }
-
-    @Override
-    public void accountUpdateMultiEnd(int reqId) {
-    }
-
-    @Override
-    public void securityDefinitionOptionalParameter(int reqId, String exchange, int underlyingConId, String tradingClass, String multiplier, Set<String> expirations, Set<Double> strikes) {
-    }
-
-    @Override
-    public void securityDefinitionOptionalParameterEnd(int reqId) {
-    }
-
-    @Override
-    public void softDollarTiers(int reqId, SoftDollarTier[] tiers) {
-    }
-
-    @Override
-    public void familyCodes(FamilyCode[] familyCodes) {
-    }
-
-    @Override
-    public void symbolSamples(int reqId, ContractDescription[] contractDescriptions) {
-    }
-
-    @Override
-    public void mktDepthExchanges(DepthMktDataDescription[] depthMktDataDescriptions) {
-    }
-
-    @Override
-    public void tickReqParams(int tickerId, double minTick, String bboExchange, int snapshotPermissions) {
-    }
-
-    @Override
-    public void smartComponents(int reqId, Map<Integer, java.util.Map.Entry<String, Character>> theMap) {
-    }
-
-    @Override
-    public void newsProviders(NewsProvider[] newsProviders) {
-    }
-
-    @Override
-    public void tickNews(int tickerId, long timeStamp, String providerCode, String articleId, String headline, String extraData) {
-    }
-
-    @Override
-    public void tickByTickAllLast(int reqId, int tickType, long time, double price, Decimal size, TickAttribLast tickAttribLast, String exchange, String specialConditions) {
-    }
-
-    @Override
-    public void tickByTickBidAsk(int reqId, long time, double bidPrice, double askPrice, Decimal bidSize, Decimal askSize, TickAttribBidAsk tickAttribBidAsk) {
-    }
-
-    @Override
-    public void tickByTickMidPoint(int reqId, long time, double midPoint) {
-    }
-
-    @Override
-    public void orderBound(long orderId, int apiClientId, int apiOrderId) {
-    }
-
-    @Override
-    public void completedOrder(Contract contract, Order order, OrderState orderState) {
-    }
-
-    @Override
-    public void completedOrdersEnd() {
-    }
-
-    @Override
-    public void replaceFAEnd(int reqId, String text) {
-    }
-
-    @Override
-    public void wshMetaData(int reqId, String dataJson) {
-    }
-
-    @Override
-    public void wshEventData(int reqId, String dataJson) {
-    }
-
-    @Override
-    public void historicalSchedule(int i, String s, String s1, String s2, List<HistoricalSession> list) {
-
-    }
-
-    @Override
-    public void headTimestamp(int reqId, String headTimestamp) {
-    }
-
-    @Override
-    public void histogramData(int i, List<HistogramEntry> list) {
-
-    }
-
-    @Override
-    public void historicalDataUpdate(int i, Bar bar) {
-
-    }
-
-    @Override
-    public void rerouteMktDataReq(int reqId, int conId, String exchange) {
-    }
-
-    @Override
-    public void rerouteMktDepthReq(int reqId, int conId, String exchange) {
-    }
-
-    @Override
-    public void marketRule(int marketRuleId, PriceIncrement[] priceIncrements) {
-    }
-
-    @Override
-    public void pnl(int reqId, double dailyPnL, double unrealizedPnL, double realizedPnL) {
-    }
-
-    @Override
-    public void pnlSingle(int reqId, Decimal pos, double dailyPnL, double unrealizedPnL, double realizedPnL, double value) {
-    }
-
-    @Override
-    public void historicalTicks(int i, List<HistoricalTick> list, boolean b) {
-
-    }
-
-    @Override
-    public void historicalTicksBidAsk(int i, List<HistoricalTickBidAsk> list, boolean b) {
-
-    }
-
-    @Override
-    public void historicalTicksLast(int i, List<HistoricalTickLast> list, boolean b) {
-
-    }
-
-    @Override
-    public void historicalNews(int requestId, String time, String providerCode, String articleId, String headline) {
-    }
-
-    @Override
-    public void historicalNewsEnd(int requestId, boolean hasMore) {
-    }
-
-    @Override
-    public void newsArticle(int requestId, int articleType, String articleText) {
-    }
-
-    @Override
-    public void userInfo(int reqId, String whiteBrandingId) {
-    }
-
-    @Override
-    public void issueSignal() {
-        log.info("issueSignal");
-    }
-
-    @Override
-    public void waitForSignal() {
-        log.info("waitForSignal");
-    }
-
 
 }

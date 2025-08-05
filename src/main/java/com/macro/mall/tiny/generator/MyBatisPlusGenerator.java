@@ -25,8 +25,8 @@ public class MyBatisPlusGenerator {
 
     public static void main(String[] args) {
         String projectPath = System.getProperty("user.dir");
-        String moduleName = "futu";
-        String[] tableNames = new String[]{"stocks_base"};
+        String moduleName = "ibkr";
+        String[] tableNames = new String[]{"stocks_base_us","stocks_history_kl_us"};
         // 代码生成器
         AutoGenerator autoGenerator = new AutoGenerator();
         autoGenerator.setGlobalConfig(initGlobalConfig(projectPath));

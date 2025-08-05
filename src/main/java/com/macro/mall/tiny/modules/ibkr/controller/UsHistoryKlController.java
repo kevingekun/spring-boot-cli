@@ -9,6 +9,11 @@ import com.macro.mall.tiny.modules.futu.response.HistoryKLResp;
 import com.macro.mall.tiny.modules.futu.service.HistoryKlService;
 import com.macro.mall.tiny.modules.futu.service.StocksBaseService;
 import com.macro.mall.tiny.modules.ibkr.component.HistoricalDataComponent;
+import com.macro.mall.tiny.modules.ibkr.model.StocksBaseUs;
+import com.macro.mall.tiny.modules.ibkr.model.StocksHistoryKlUs;
+import com.macro.mall.tiny.modules.ibkr.response.HistoryKLUSResp;
+import com.macro.mall.tiny.modules.ibkr.service.StocksBaseUsService;
+import com.macro.mall.tiny.modules.ibkr.service.StocksHistoryKlUsService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -19,7 +24,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
@@ -37,15 +46,15 @@ import java.util.List;
 @AllArgsConstructor
 public class UsHistoryKlController {
 
-    private final HistoryKlService historyKlService;
-    private final ApplicationContext applicationContext;
-    private final StocksBaseService stocksBaseService;
+    private final StocksHistoryKlUsService stocksHistoryKlUsService;
+    private final StocksBaseUsService stocksBaseUsService;
+    private final HistoricalDataComponent historicalDataComponent;
 
     @GetMapping("/test")
     public CommonResult<Object> tst(){
-        HistoricalDataComponent historicalDataComponent = applicationContext.getBean(HistoricalDataComponent.class);
-        historicalDataComponent.requestStockInfo("AAPL");
+//        historicalDataComponent.requestStockInfo("AAPL");
 //        historicalDataComponent.requestHistoricalData("AAPL");
+        historicalDataComponent.getLastKL("AAPL");
         return CommonResult.success(historicalDataComponent);
     }
 
@@ -58,13 +67,13 @@ public class UsHistoryKlController {
     @ResponseBody
     public CommonResult<List<HistoryKl>> add(@RequestParam("code") String code) {
         log.info("subscribe code: {}", code);
-        StocksBase stocksBase = stocksBaseService.getByCode(code);
+        StocksBaseUs stocksBase = stocksBaseUsService.getByCode(code);
         if (stocksBase != null) {
             log.info("subscribe already stocksBase: {}", stocksBase);
             return CommonResult.failed("股票已经订阅过了");
         }
-        HistoryKLComponent historyKLComponent = applicationContext.getBean(HistoryKLComponent.class);
-        historyKLComponent.getHistoryKL(code, null);
+        historicalDataComponent.requestStockInfo(code);
+        historicalDataComponent.requestHistoricalData(code);
         return CommonResult.success(new ArrayList<>());
     }
 
@@ -77,13 +86,13 @@ public class UsHistoryKlController {
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ResponseBody
-    public CommonResult<HistoryKLResp> list(@RequestParam("code") String code,
+    public CommonResult<HistoryKLUSResp> list(@RequestParam("code") String code,
                                             @RequestParam("startDate") String startDate,
                                             @RequestParam("endDate") String endDate) {
         log.info("code: {}, startDate: {}, endDate: {}", code, startDate, endDate);
-        HistoryKLResp resp = new HistoryKLResp();
+        HistoryKLUSResp resp = new HistoryKLUSResp();
         resp.setCode(code);
-        List<HistoryKl> historyKlList = historyKlService.getHistoryKL(code, startDate, endDate);
+        List<StocksHistoryKlUs> historyKlList = stocksHistoryKlUsService.getHistoryKL(code, startDate, endDate);
         if (CollectionUtil.isNotEmpty(historyKlList)) {
             String name = historyKlList.get(0).getName();
             resp.setName(name);
