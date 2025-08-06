@@ -51,4 +51,4 @@ secure:
 #      - /test/**
 #      - /historyKl/**
 #      - /stocksBase/**
-      - /us/historyKl/**
+#      - /us/historyKl/**

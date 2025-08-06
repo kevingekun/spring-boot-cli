@@ -35,7 +35,7 @@ public class StocksHistoryKlUsServiceImpl extends ServiceImpl<StocksHistoryKlUsM
         if (StrUtil.isNotBlank(endDate)) {
             queryWrapper.le("data_time", endDate);
         }
-        queryWrapper.orderByAsc("id");
+        queryWrapper.orderByAsc("data_time");
         return baseMapper.selectList(queryWrapper);
     }
 
