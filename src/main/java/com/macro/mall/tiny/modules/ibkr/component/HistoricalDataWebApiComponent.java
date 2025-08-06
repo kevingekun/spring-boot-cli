@@ -64,7 +64,9 @@ public class HistoricalDataWebApiComponent {
         //将 now 转换为 startTime 样式
         String format = simpleDateFormat.format(now);
         boolean running = true;
+        int count = 0;
         while (running) {
+            count ++;
             String sTime = format + "-18:30:00";
             String url = "http://localhost:50000/v1/api/iserver/marketdata/history?conid=" + conId + "&exchange=SMART&period=100d&bar=1d&startTime=" + sTime + "&outsideRth=false";
             String result = HttpUtil.get(url);
@@ -122,6 +124,12 @@ public class HistoricalDataWebApiComponent {
                     }
                 }
                 stocksHistoryKlUsService.saveBatch(list);
+            } else {
+                running = false;
+            }
+            if (count > 1000) {
+                //避免无限循环
+                running = false;
             }
         }
         log.info("股票历史数据查询完成:{}", conId);
