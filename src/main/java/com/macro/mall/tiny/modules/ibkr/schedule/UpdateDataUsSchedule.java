@@ -1,6 +1,7 @@
 package com.macro.mall.tiny.modules.ibkr.schedule;
 
 import com.macro.mall.tiny.modules.ibkr.component.HistoricalDataComponent;
+import com.macro.mall.tiny.modules.ibkr.component.HistoricalDataWebApiComponent;
 import com.macro.mall.tiny.modules.ibkr.model.StocksBaseUs;
 import com.macro.mall.tiny.modules.ibkr.service.StocksBaseUsService;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,7 @@ public class UpdateDataUsSchedule {
 
     private final StocksBaseUsService stocksBaseUsService;
     private final HistoricalDataComponent historicalDataComponent;
+    private final HistoricalDataWebApiComponent historicalDataWebApiComponent;
 
     //每周二到周六凌晨 4 点更新一次
     @Scheduled(cron = "0 0 4 ? * TUE-SAT")
@@ -42,7 +44,7 @@ public class UpdateDataUsSchedule {
         log.info("定时更新数据 股票数量:{}", stocksBaseList.size());
         for (StocksBaseUs base : stocksBaseList) {
             //更新数据
-            historicalDataComponent.getLastKL(base.getCode());
+            historicalDataWebApiComponent.getLastKL(base.getCode());
             log.info("定时更新数据 股票:{}", base.getCode());
         }
     }

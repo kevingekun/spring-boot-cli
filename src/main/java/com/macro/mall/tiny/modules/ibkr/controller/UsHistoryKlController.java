@@ -9,6 +9,7 @@ import com.macro.mall.tiny.modules.futu.response.HistoryKLResp;
 import com.macro.mall.tiny.modules.futu.service.HistoryKlService;
 import com.macro.mall.tiny.modules.futu.service.StocksBaseService;
 import com.macro.mall.tiny.modules.ibkr.component.HistoricalDataComponent;
+import com.macro.mall.tiny.modules.ibkr.component.HistoricalDataWebApiComponent;
 import com.macro.mall.tiny.modules.ibkr.model.StocksBaseUs;
 import com.macro.mall.tiny.modules.ibkr.model.StocksHistoryKlUs;
 import com.macro.mall.tiny.modules.ibkr.response.HistoryKLUSResp;
@@ -49,14 +50,34 @@ public class UsHistoryKlController {
     private final StocksHistoryKlUsService stocksHistoryKlUsService;
     private final StocksBaseUsService stocksBaseUsService;
     private final HistoricalDataComponent historicalDataComponent;
+    private final HistoricalDataWebApiComponent historicalDataWebApiComponent;
 
-    @GetMapping("/test")
+/*    @GetMapping("/test")
     public CommonResult<Object> tst(){
 //        historicalDataComponent.requestStockInfo("AAPL");
 //        historicalDataComponent.requestHistoricalData("AAPL");
         historicalDataComponent.getLastKL("AAPL");
         return CommonResult.success(historicalDataComponent);
-    }
+    }*/
+
+    /**
+     * 增加订阅一个股票的历史数据
+     *
+     * @param code 股票代码
+     */
+  /*  @RequestMapping(value = "/subscribe", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<List<HistoryKl>> add(@RequestParam("code") String code) {
+        log.info("subscribe code: {}", code);
+        StocksBaseUs stocksBase = stocksBaseUsService.getByCode(code);
+        if (stocksBase != null) {
+            log.info("subscribe already stocksBase: {}", stocksBase);
+            return CommonResult.failed("股票已经订阅过了");
+        }
+        historicalDataComponent.requestStockInfo(code);
+        historicalDataComponent.requestHistoricalData(code);
+        return CommonResult.success(new ArrayList<>());
+    }*/
 
     /**
      * 增加订阅一个股票的历史数据
@@ -72,8 +93,8 @@ public class UsHistoryKlController {
             log.info("subscribe already stocksBase: {}", stocksBase);
             return CommonResult.failed("股票已经订阅过了");
         }
-        historicalDataComponent.requestStockInfo(code);
-        historicalDataComponent.requestHistoricalData(code);
+        String conId = historicalDataWebApiComponent.requestStockInfo(code);
+        historicalDataWebApiComponent.requestHistoricalData(conId);
         return CommonResult.success(new ArrayList<>());
     }
 
