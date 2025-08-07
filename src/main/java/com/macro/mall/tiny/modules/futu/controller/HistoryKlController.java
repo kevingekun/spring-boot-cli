@@ -60,6 +60,20 @@ public class HistoryKlController {
     }
 
     /**
+     * 取消订阅一个股票的历史数据
+     *
+     * @param code 股票代码
+     */
+    @RequestMapping(value = "/unsubscribe", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<Object> unsubscribe(@RequestParam("code") String code) {
+        log.info("unsubscribe code: {}", code);
+        stocksBaseService.deleteByCode(code);
+        historyKlService.deleteByCode(code);
+        return CommonResult.success(null);
+    }
+
+    /**
      * 根据 code 查询全部历史数据
      *
      * @param code      股票代码

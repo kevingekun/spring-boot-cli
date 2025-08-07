@@ -49,4 +49,11 @@ public class HistoryKlServiceImpl extends ServiceImpl<HistoryKlMapper, HistoryKl
             baseMapper.insert(historyKl);
         }
     }
+
+    @Override
+    public void deleteByCode(String code) {
+        QueryWrapper<HistoryKl> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("code", code);
+        baseMapper.delete(queryWrapper);
+    }
 }

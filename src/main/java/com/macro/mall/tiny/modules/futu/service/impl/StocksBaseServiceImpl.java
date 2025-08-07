@@ -57,4 +57,11 @@ public class StocksBaseServiceImpl extends ServiceImpl<StocksBaseMapper, StocksB
         }
         return 0;
     }
+
+    @Override
+    public void deleteByCode(String code) {
+        QueryWrapper<StocksBase> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("code", code);
+        baseMapper.delete(queryWrapper);
+    }
 }

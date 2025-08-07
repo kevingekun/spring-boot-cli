@@ -31,4 +31,11 @@ public interface HistoryKlService extends IService<HistoryKl> {
      * @param historyKl 历史K线数据
      */
     void saveOrUpdateData(HistoryKl historyKl);
+
+    /**
+     * 根据股票代码删除历史K线数据
+     *
+     * @param code 股票代码
+     */
+    void deleteByCode(String code);
 }
