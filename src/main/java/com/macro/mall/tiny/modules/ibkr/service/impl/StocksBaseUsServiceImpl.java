@@ -1,5 +1,6 @@
 package com.macro.mall.tiny.modules.ibkr.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.macro.mall.tiny.modules.futu.model.StocksBase;
@@ -26,6 +27,9 @@ public class StocksBaseUsServiceImpl extends ServiceImpl<StocksBaseUsMapper, Sto
 
     @Override
     public void saveStocksBaseUs(String code, String name) {
+        if (StrUtil.isBlank(code)) {
+            return;
+        }
         QueryWrapper<StocksBaseUs> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("code", code);
         queryWrapper.last("limit 1");
