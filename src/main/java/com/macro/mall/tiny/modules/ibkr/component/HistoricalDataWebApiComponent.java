@@ -66,7 +66,7 @@ public class HistoricalDataWebApiComponent {
         boolean running = true;
         int count = 0;
         while (running) {
-            count ++;
+            count++;
             String sTime = format + "-18:30:00";
             String url = "http://localhost:50000/v1/api/iserver/marketdata/history?conid=" + conId + "&exchange=SMART&period=100d&bar=1d&startTime=" + sTime + "&outsideRth=false";
             String result = HttpUtil.get(url);
@@ -134,6 +134,73 @@ public class HistoricalDataWebApiComponent {
         }
         log.info("股票历史数据查询完成:{}", conId);
         return count;
+    }
+
+    /**
+     * 手动查询股票历史数据，根据数据库存的最新的一条数据日期，补全到当前的缺失数据
+     *
+     * @param conId 股票代码
+     * @param code  股票名称
+     */
+    public void requestHistoricalDataManual(String conId, String code) {
+        log.info("股票历史数据查询:{} 手动", conId);
+        StocksHistoryKlUs lastKL = stocksHistoryKlUsService.getLastKL(code);
+        Date lastKLDataTime = lastKL.getDataTime();
+        Date now = new Date();
+        // 判断 now 与 lastKLDataTime 相差几天
+        long diff = now.getTime() - lastKLDataTime.getTime();
+        long diffDays = diff / (24 * 60 * 60 * 1000) + 1;
+        // 获取当前日期
+        LocalDate today = LocalDate.now();
+        //将 now 转换为 startTime 样式
+        String format = simpleDateFormat.format(now);
+        String sTime = format + "-18:30:00";
+        String url = "http://localhost:50000/v1/api/iserver/marketdata/history?conid=" + conId + "&exchange=SMART&period=" + diffDays + "d&bar=1d&startTime=" + sTime + "&outsideRth=false";
+        String result = HttpUtil.get(url);
+        log.info("股票历史数据查询成功:{}，查询结果:{}", conId, result);
+        JSONObject jsonObject = JSONUtil.parseObj(result);
+        String stockCode = jsonObject.getStr("symbol");
+        JSONArray data = jsonObject.getJSONArray("data");
+        if (!data.isEmpty()) {
+            for (int i = 0; i < data.size(); i++) {
+                JSONObject jsonObject1 = data.getJSONObject(i);
+                Float o = jsonObject1.getFloat("o");
+                Float c = jsonObject1.getFloat("c");
+                Float h = jsonObject1.getFloat("h");
+                Float l = jsonObject1.getFloat("l");
+                //格式:1753795800000
+                Long t = jsonObject1.getLong("t");
+                StocksHistoryKlUs stocksHistoryKlUs = new StocksHistoryKlUs();
+                stocksHistoryKlUs.setCode(stockCode);
+                // 将毫秒转换为日期
+                Date date = new Date(t);
+                // 将 Date 转换为 LocalDate，只保留年月日
+                LocalDate localDate = date.toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate();
+                // 将 LocalDate 转换回 Date（时间部分为 00:00:00）
+                Date dateOnly = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                stocksHistoryKlUs.setDataTime(dateOnly);
+                stocksHistoryKlUs.setOpenPrice(BigDecimal.valueOf(o));
+                stocksHistoryKlUs.setHighPrice(BigDecimal.valueOf(h));
+                stocksHistoryKlUs.setLowPrice(BigDecimal.valueOf(l));
+                stocksHistoryKlUs.setClosePrice(BigDecimal.valueOf(c));
+                stocksHistoryKlUs.setUpdateDate(now);
+                stocksHistoryKlUs.setCreateDate(now);
+                try {
+                    //判断 date 是不是当天
+                    if (localDate.isEqual(today)) {
+                        // 是当天，更新数据
+                        stocksHistoryKlUsService.saveOrUpdateData(stocksHistoryKlUs);
+                    } else {
+                        stocksHistoryKlUsService.save(stocksHistoryKlUs);
+                    }
+                } catch (Exception e) {
+                    log.error("save stocksHistoryKlUs error");
+                }
+            }
+        }
+        log.info("股票历史数据查询完成:{} 手动", conId);
     }
 
     private static String startTimePlus1Day(String startTime, String format) {

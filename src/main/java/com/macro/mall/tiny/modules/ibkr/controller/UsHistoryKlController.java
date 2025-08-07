@@ -122,8 +122,8 @@ public class UsHistoryKlController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<HistoryKLUSResp> list(@RequestParam("code") String code,
-                                            @RequestParam("startDate") String startDate,
-                                            @RequestParam("endDate") String endDate) {
+                                              @RequestParam("startDate") String startDate,
+                                              @RequestParam("endDate") String endDate) {
         log.info("code: {}, startDate: {}, endDate: {}", code, startDate, endDate);
         HistoryKLUSResp resp = new HistoryKLUSResp();
         resp.setCode(code);
@@ -134,6 +134,21 @@ public class UsHistoryKlController {
             resp.setHistoryKlList(historyKlList);
         }
         return CommonResult.success(resp);
+    }
+
+    /**
+     * 手动更新股票历史数据
+     *
+     * @return 结果
+     */
+    @GetMapping(value = "/manual-update")
+    public CommonResult<Object> manualUpdate() {
+        List<StocksBaseUs> stocksBaseUses = stocksBaseUsService.listAllOfOrder();
+        for (StocksBaseUs stocksBaseUs : stocksBaseUses) {
+            String conId = historicalDataWebApiComponent.requestStockInfo(stocksBaseUs.getCode());
+            historicalDataWebApiComponent.requestHistoricalDataManual(conId, stocksBaseUs.getCode());
+        }
+        return CommonResult.success(null);
     }
 }
 

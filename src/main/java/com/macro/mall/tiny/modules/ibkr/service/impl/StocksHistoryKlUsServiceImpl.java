@@ -58,4 +58,13 @@ public class StocksHistoryKlUsServiceImpl extends ServiceImpl<StocksHistoryKlUsM
         queryWrapper.eq("code", code.toUpperCase());
         baseMapper.delete(queryWrapper);
     }
+
+    @Override
+    public StocksHistoryKlUs getLastKL(String code) {
+        QueryWrapper<StocksHistoryKlUs> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("code", code.toUpperCase());
+        queryWrapper.orderByDesc("data_time");
+        queryWrapper.last("limit 1");
+        return baseMapper.selectOne(queryWrapper);
+    }
 }

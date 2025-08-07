@@ -40,4 +40,12 @@ public interface StocksHistoryKlUsService extends IService<StocksHistoryKlUs> {
      */
     void deleteByCode(String code);
 
+    /**
+     * 获取最新的K线数据
+     *
+     * @param code 股票代码
+     * @return 最新的K线数据
+     */
+    StocksHistoryKlUs getLastKL(String code);
+
 }
