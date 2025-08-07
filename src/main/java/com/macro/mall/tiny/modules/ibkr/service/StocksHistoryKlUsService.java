@@ -33,4 +33,11 @@ public interface StocksHistoryKlUsService extends IService<StocksHistoryKlUs> {
      */
     void saveOrUpdateData(StocksHistoryKlUs historyKl);
 
+    /**
+     * 根据股票代码删除历史K线数据
+     *
+     * @param code 股票代码
+     */
+    void deleteByCode(String code);
+
 }

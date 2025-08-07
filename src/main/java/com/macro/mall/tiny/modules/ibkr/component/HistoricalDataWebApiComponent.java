@@ -56,7 +56,7 @@ public class HistoricalDataWebApiComponent {
         return null;
     }
 
-    public void requestHistoricalData(String conId) {
+    public int requestHistoricalData(String conId) {
         log.info("股票历史数据查询:{}", conId);
         Date now = new Date();
         // 获取当前日期
@@ -133,7 +133,7 @@ public class HistoricalDataWebApiComponent {
             }
         }
         log.info("股票历史数据查询完成:{}", conId);
-
+        return count;
     }
 
     private static String startTimePlus1Day(String startTime, String format) {

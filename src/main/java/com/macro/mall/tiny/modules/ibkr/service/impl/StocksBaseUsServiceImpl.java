@@ -69,4 +69,11 @@ public class StocksBaseUsServiceImpl extends ServiceImpl<StocksBaseUsMapper, Sto
         queryWrapper.orderByAsc("order_num");
         return baseMapper.selectList(queryWrapper);
     }
+
+    @Override
+    public void deleteByCode(String code) {
+        QueryWrapper<StocksBaseUs> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("code", code.toUpperCase());
+        baseMapper.delete(queryWrapper);
+    }
 }

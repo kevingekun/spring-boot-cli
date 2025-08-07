@@ -51,4 +51,11 @@ public class StocksHistoryKlUsServiceImpl extends ServiceImpl<StocksHistoryKlUsM
             baseMapper.insert(historyKl);
         }
     }
+
+    @Override
+    public void deleteByCode(String code) {
+        QueryWrapper<StocksHistoryKlUs> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("code", code.toUpperCase());
+        baseMapper.delete(queryWrapper);
+    }
 }

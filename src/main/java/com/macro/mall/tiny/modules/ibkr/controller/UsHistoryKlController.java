@@ -86,7 +86,7 @@ public class UsHistoryKlController {
      */
     @RequestMapping(value = "/subscribe", method = RequestMethod.GET)
     @ResponseBody
-    public CommonResult<List<HistoryKl>> add(@RequestParam("code") String code) {
+    public CommonResult<Integer> add(@RequestParam("code") String code) {
         log.info("subscribe code: {}", code);
         StocksBaseUs stocksBase = stocksBaseUsService.getByCode(code);
         if (stocksBase != null) {
@@ -94,8 +94,22 @@ public class UsHistoryKlController {
             return CommonResult.failed("股票已经订阅过了");
         }
         String conId = historicalDataWebApiComponent.requestStockInfo(code);
-        historicalDataWebApiComponent.requestHistoricalData(conId);
-        return CommonResult.success(new ArrayList<>());
+        int count = historicalDataWebApiComponent.requestHistoricalData(conId);
+        return CommonResult.success(count);
+    }
+
+    /**
+     * 取消订阅一个股票的历史数据
+     *
+     * @param code 股票代码
+     */
+    @RequestMapping(value = "/unsubscribe", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<Object> unsubscribe(@RequestParam("code") String code) {
+        log.info("unsubscribe code: {}", code);
+        stocksBaseUsService.deleteByCode(code);
+        stocksHistoryKlUsService.deleteByCode(code);
+        return CommonResult.success(null);
     }
 
     /**

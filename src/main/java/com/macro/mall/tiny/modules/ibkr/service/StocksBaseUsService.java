@@ -45,4 +45,11 @@ public interface StocksBaseUsService extends IService<StocksBaseUs> {
      * @return 最大排序号
      */
     Integer getMaxOrderNum();
+
+    /**
+     * 根据股票代码删除股票基础信息
+     *
+     * @param code 股票代码
+     */
+    void deleteByCode(String code);
 }
