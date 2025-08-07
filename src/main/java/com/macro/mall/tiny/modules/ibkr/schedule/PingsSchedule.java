@@ -33,6 +33,16 @@ public class PingsSchedule {
         ibkrAuthenticated = authenticated;
         ibkrConnected = connected;
         log.info("prevent the session from ending end");
+        if (connected && !authenticated) {
+            log.info("IBKR连接成功，但未认证");
+            // 重新认证
+            String authUrl = "http://localhost:50000/v1/api/iserver/auth/ssodh/init";
+            JSONObject body = new JSONObject();
+            body.put("publish", true);
+            body.put("compete", true);
+            String authResult = HttpUtil.post(authUrl, body.toString());
+            log.info("IBKR连接成功，重新认证结果 = {}", authResult);
+        }
     }
 
 
