@@ -1,5 +1,6 @@
 package com.macro.mall.tiny.modules.ibkr.schedule;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
@@ -25,24 +26,41 @@ public class PingsSchedule {
         String url = "http://localhost:50000/v1/api/tickle";
         String result = HttpUtil.post(url, new HashMap<>());
         log.info("result = {}", result);
-        JSONObject jsonObject = JSONUtil.parseObj(result);
-        JSONObject iServer = jsonObject.getJSONObject("iserver");
-        JSONObject authStatus = iServer.getJSONObject("authStatus");
-        Boolean authenticated = authStatus.getBool("authenticated");
-        Boolean connected = authStatus.getBool("connected");
-        ibkrAuthenticated = authenticated;
-        ibkrConnected = connected;
-        log.info("prevent the session from ending end");
-        if (connected && !authenticated) {
-            log.info("IBKR连接成功，但未认证");
-            // 重新认证
-            String authUrl = "http://localhost:50000/v1/api/iserver/auth/ssodh/init";
-            JSONObject body = new JSONObject();
-            body.put("publish", true);
-            body.put("compete", true);
-            String authResult = HttpUtil.post(authUrl, body.toString());
-            log.info("IBKR连接成功，重新认证结果 = {}", authResult);
+        if (StrUtil.isBlank(result)) {
+            log.error("IBKR web api 连接失败，响应为空");
+            ibkrConnected = false;
+            ibkrAuthenticated = false;
+            return;
         }
+        try {
+            JSONObject jsonObject = JSONUtil.parseObj(result);
+            JSONObject iServer = jsonObject.getJSONObject("iserver");
+            JSONObject authStatus = iServer.getJSONObject("authStatus");
+            Boolean authenticated = authStatus.getBool("authenticated");
+            Boolean connected = authStatus.getBool("connected");
+            ibkrAuthenticated = authenticated;
+            ibkrConnected = connected;
+            log.info("prevent the session from ending end");
+            if (!connected) {
+                log.error("IBKR web api 连接失败，连接失败");
+                return;
+            }
+            if (!authenticated) {
+                log.info("IBKR连接成功，但未认证");
+                // 重新认证
+                String authUrl = "http://localhost:50000/v1/api/iserver/auth/ssodh/init";
+                JSONObject body = new JSONObject();
+                body.put("publish", true);
+                body.put("compete", true);
+                String authResult = HttpUtil.post(authUrl, body.toString());
+                log.info("IBKR连接成功，重新认证结果 = {}", authResult);
+            }
+        } catch (Exception e) {
+            log.error("IBKR web api 连接失败，解析响应失败", e);
+            ibkrConnected = false;
+            ibkrAuthenticated = false;
+        }
+
     }
 
 
