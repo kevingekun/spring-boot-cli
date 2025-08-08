@@ -4,6 +4,8 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.macro.mall.tiny.modules.ibkr.component.ProcessManager;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -15,7 +17,10 @@ import java.util.HashMap;
  */
 @Slf4j
 @Component
+@AllArgsConstructor
 public class PingsSchedule {
+
+    private final ProcessManager processManager;
 
     public static volatile Boolean ibkrConnected = false;
     public static volatile Boolean ibkrAuthenticated = false;
@@ -30,6 +35,8 @@ public class PingsSchedule {
             log.error("IBKR web api 连接失败，响应为空");
             ibkrConnected = false;
             ibkrAuthenticated = false;
+            // 重启 IBKR Web API
+            processManager.restartIbkrWebApi();
             return;
         }
         try {
@@ -43,6 +50,8 @@ public class PingsSchedule {
             log.info("prevent the session from ending end");
             if (!connected) {
                 log.error("IBKR web api 连接失败，连接失败");
+                // 重启 IBKR Web API
+                processManager.restartIbkrWebApi();
                 return;
             }
             if (!authenticated) {
@@ -59,6 +68,8 @@ public class PingsSchedule {
             log.error("IBKR web api 连接失败，解析响应失败", e);
             ibkrConnected = false;
             ibkrAuthenticated = false;
+            // 重启 IBKR Web API
+            processManager.restartIbkrWebApi();
         }
 
     }
