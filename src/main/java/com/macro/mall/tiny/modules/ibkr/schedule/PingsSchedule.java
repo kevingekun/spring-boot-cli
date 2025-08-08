@@ -25,18 +25,39 @@ public class PingsSchedule {
     public static volatile Boolean ibkrConnected = false;
     public static volatile Boolean ibkrAuthenticated = false;
 
+    /**
+     * 定时检查 IBKR Web API 连接状态，若断开则重启
+     */
+    @Scheduled(cron = "0 0/5 * ? * *")
+    public void restartIbkrWebApi() {
+        if (!ibkrConnected) {
+            processManager.restartIbkrWebApi();
+            return;
+        }
+        if (!ibkrAuthenticated) {
+            processManager.restartIbkrWebApi();
+        }
+    }
+
+    /**
+     * 定时Ping IBKR服务器，检查连接状态
+     */
     @Scheduled(cron = "0 0/1 * ? * *")
     public void ping() {
         log.info("prevent the session from ending start");
         String url = "http://localhost:50000/v1/api/tickle";
-        String result = HttpUtil.post(url, new HashMap<>());
+        String result;
+        try {
+            result = HttpUtil.post(url, new HashMap<>());
+        } catch (Exception e) {
+            log.error("IBKR web api 连接失败，服务异常", e);
+            return;
+        }
         log.info("result = {}", result);
         if (StrUtil.isBlank(result)) {
             log.error("IBKR web api 连接失败，响应为空");
             ibkrConnected = false;
             ibkrAuthenticated = false;
-            // 重启 IBKR Web API
-            processManager.restartIbkrWebApi();
             return;
         }
         try {
@@ -50,8 +71,6 @@ public class PingsSchedule {
             log.info("prevent the session from ending end");
             if (!connected) {
                 log.error("IBKR web api 连接失败，连接失败");
-                // 重启 IBKR Web API
-                processManager.restartIbkrWebApi();
                 return;
             }
             if (!authenticated) {
@@ -68,8 +87,6 @@ public class PingsSchedule {
             log.error("IBKR web api 连接失败，解析响应失败", e);
             ibkrConnected = false;
             ibkrAuthenticated = false;
-            // 重启 IBKR Web API
-            processManager.restartIbkrWebApi();
         }
 
     }

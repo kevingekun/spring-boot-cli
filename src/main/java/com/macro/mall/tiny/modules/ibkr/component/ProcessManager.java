@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.regex.Matcher;
@@ -32,7 +33,7 @@ public class ProcessManager {
             }
 
             // Step 3: Restart the process
-            String startCommand = "nohup /apps/ibkr/clientportal.gw/bin/run.sh /apps/ibkr/clientportal.gw/root/conf.yaml &"; // Replace with your start command
+            String startCommand = "nohup bin/run.sh root/conf.yaml &"; // Replace with your start command
             restartProcess(startCommand);
             log.info("IBKR Web API process restarted with command:{}", startCommand);
         } catch (IOException | InterruptedException e) {
@@ -40,7 +41,7 @@ public class ProcessManager {
         }
     }
 
-    // Find the process ID (PID) for a given JAR or keyword
+    // 查找给定 JAR 或关键字的进程 ID (PID)
     private static String findProcess(String jarName) throws IOException {
         String command = "ps -ef | grep " + jarName + " | grep -v grep";
         Process process = Runtime.getRuntime().exec(new String[]{"/bin/sh", "-c", command});
@@ -48,26 +49,53 @@ public class ProcessManager {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                // Example output: "user 12345 ... java -jar your-app.jar"
+                // 示例输出: "user 12345 ... java -jar your-app.jar"
                 Pattern pattern = Pattern.compile("\\w+\\s+(\\d+)\\s+.*" + jarName + ".*");
                 Matcher matcher = pattern.matcher(line);
                 if (matcher.find()) {
-                    return matcher.group(1); // Return the PID
+                    return matcher.group(1); // 返回 PID
                 }
             }
         }
-        return null; // No process found
+        return null; // 未找到进程
     }
 
-    // Kill the process with the given PID
+    // 杀死给定 PID 的进程
     private static void killProcess(String pid) throws IOException, InterruptedException {
         String command = "kill -9 " + pid;
         Process process = Runtime.getRuntime().exec(new String[]{"/bin/sh", "-c", command});
-        process.waitFor(); // Wait for the kill command to complete
+
+        // 捕获错误输出
+        try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+            String line;
+            while ((line = errorReader.readLine()) != null) {
+                System.err.println("杀死进程错误: " + line);
+            }
+        }
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            System.err.println("杀死进程失败，退出码: " + exitCode);
+        }
     }
 
-    // Restart the process with the given command
+    // 使用给定命令重启进程
     private static void restartProcess(String startCommand) throws IOException {
-        Runtime.getRuntime().exec(new String[]{"/bin/sh", "-c", startCommand});
+        // 切换到 /apps/ibkr 目录并执行启动命令
+        String fullCommand = "cd /apps/ibkr/clientportal.gw && " + startCommand;
+        ProcessBuilder pb = new ProcessBuilder("/bin/sh", "-c", fullCommand);
+
+        // 设置输出文件以捕获 nohup 输出
+        pb.redirectOutput(new File("/apps/logs/restartIbkrWebApi.log"));
+        pb.redirectErrorStream(true); // 合并错误流到 restartIbkrWebApi.log
+
+        Process process = pb.start();
+
+        // 异步读取输出（可选，如果需要实时查看）
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                log.info("重启进程输出: {}", line);
+            }
+        }
     }
 }
